@@ -18,6 +18,14 @@ export const clearToken = async () => {
   }
 };
 
+export const removeItem = async (item) => {
+  try {
+    await AsyncStorage.removeItem(item);
+  } catch (e) {
+    console.error('Error clearing token:', e);
+  }
+};
+
 // Get token
 export const getToken = async () => {
   try {
@@ -25,5 +33,22 @@ export const getToken = async () => {
   } catch (e) {
     console.error('Error getting token:', e);
     return null;
+  }
+};
+
+export const getObject = async (item) => {
+  try {
+    return await AsyncStorage.getItem(item);
+  } catch (e) {
+    console.error(`Error getting ${item}:`, e);
+    return null;
+  }
+};
+
+export const setObject = async (item) => {
+  try {
+    await AsyncStorage.setItem(item);
+  } catch (e) {
+    console.error(`Error saving ${item}:`, e);
   }
 };

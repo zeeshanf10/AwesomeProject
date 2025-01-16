@@ -1,16 +1,14 @@
 // Helper functions for token management
 
-import { useAuth } from '../features/AuthStack/AuthContext';
 import axiosInstance from './axiosInstance';
-import {saveToken} from './tokenStorage';
 
- const loginUser = async credentials => {
-    const { login } = useAuth();
+
+export const loginUser = async (credentials, login) => {
   try {
     const response = await axiosInstance.post('/login', credentials);
 
     const {token, user} = response.data;
-    await saveToken(token);
+    await login(token);
 
     return {token, user};
   } catch (error) {
@@ -18,5 +16,3 @@ import {saveToken} from './tokenStorage';
     throw error.response?.data?.message || error.message || 'Login failed';
   }
 };
-
-export {loginUser};

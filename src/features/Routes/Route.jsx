@@ -5,27 +5,29 @@ import SplashScreen from '../../Screens/SplashScreen';
 import {NavigationContainer} from '@react-navigation/native';
 import MainStack from '../MainStack/MainStack';
 import AuthStack from '../AuthStack/AuthStack';
+import { useAuth } from '../AuthStack/AuthContext';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 
 const Route = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null); // null indicates checking state
+  // const [isAuthenticated, setIsAuthenticated] = useState(null); // null indicates checking state
 
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = await getToken();
-      setIsAuthenticated(token);
-    };
+  // useEffect(() => {
+  //   const checkToken = async () => {
+  //     const token = await getToken();
+  //     setIsAuthenticated(token);
+  //   };
 
-    checkToken();
+  //   checkToken();
 
-  }, []);
-
+  // }, []);
+  
   console.log('authh', isAuthenticated);
 
 //     if (isAuthenticated === null) {
 //   return  <SplashScreen />;
 
 //     }
-
+const { isAuthenticated } = useAuth();
   return (
     <NavigationContainer>
       {isAuthenticated ? <MainStack /> : <AuthStack />}

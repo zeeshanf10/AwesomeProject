@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
-    Alert,
+  ActivityIndicator,
+  Alert,
   Image,
   StyleSheet,
   Text,
@@ -12,39 +13,79 @@ import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {useNavigation} from '@react-navigation/native';
-import { loginUser } from '../services/apiServices';
+import {loginUser} from '../services/apiServices';
+import {useAuth} from '../features/AuthStack/AuthContext';
+import {useLoginUserMutation} from '../services/Auth/authApiSlice';
+import {
+  setCredentials,
+  setOnboarded,
+} from '../services/Auth/AuthComponentSlice';
+import {useDispatch} from 'react-redux';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const handleRegister = () => {
     navigation.navigate('Signup');
   };
-
-  const[signInForm, setSignInForm] = useState({
+  const [loading, setLoading] = useState(false);
+  const [signInForm, setSignInForm] = useState({
     email: '',
     password: '',
-    });
+  });
 
-    const handleInputChange = (name, value) => {
-        setSignInForm({
-            ...signInForm,
-            [name]: value,
-        });
-    }
+  const handleInputChange = (name, value) => {
+    setSignInForm({
+      ...signInForm,
+      [name]: value,
+    });
+  };
+
+  const {login} = useAuth();
+
+  const [loginUser] = useLoginUserMutation();
+  const dispatch = useDispatch();
 
   const handleLogin = async () => {
+    const payload = {
+      email: signInForm?.email,
+      password: signInForm?.password,
+    };
     try {
-        const payload = {
-            email: signInForm?.email,
-            password: signInForm?.password,
-        };
-      const { user } = await loginUser(payload);
-      Alert.alert('Success', `Welcome back, ${user?.name}!`);
-      // Redirect to the next screen after login
-    //   navigation.navigate('Dashboard'); // Replace 'Home' with your desired route
+      setLoading(true);
+      const res = await loginUser(payload).unwrap();
+
+      if (res?.data?.authToken) {
+        setLoading(false);
+
+        dispatch(
+          setCredentials({
+            token: {accessToken: res.data.authToken},
+            account: res.data.user,
+          }),
+        );
+      await  login(res.data.authToken);
+        dispatch(setOnboarded(res?.data.user?.organization?.isOnBoarded));
+      } else {
+        console.error('Failed to get authentication token');
+      }
     } catch (error) {
-      Alert.alert('Login Failed', error);
+      setLoading(false);
+
+      console.error('Login failed:', error);
     }
+
+    // try {
+    //   setLoading(true);
+
+    //   // await loginUser(payload, login);
+    //   // Alert.alert('Success', `Welcome back, ${user?.name}!`);
+    //   // setLoading(false);
+    //   // Redirect to the next screen after login
+    //   //   navigation.navigate('Dashboard'); // Replace 'Home' with your desired route
+    // } catch (error) {
+    //   setLoading(false);
+    //   Alert.alert('Login Failed', error);
+    // }
   };
 
   return (
@@ -75,9 +116,9 @@ const LoginScreen = () => {
         />
         <TextInput
           placeholder="Email"
-          onChangeText={(text) => handleInputChange('email', text)}
+          onChangeText={text => handleInputChange('email', text)}
           placeholderTextColor="#9a9a9a"
-          style={{width: '70%',color: 'black'}}
+          style={{width: '70%', color: 'black'}}
         />
       </View>
       <View style={styles.inputContainer}>
@@ -90,7 +131,7 @@ const LoginScreen = () => {
         />
         <TextInput
           secureTextEntry
-            onChangeText={(text) => handleInputChange('password', text)}
+          onChangeText={text => handleInputChange('password', text)}
           placeholder="Password"
           placeholderTextColor="#9a9a9a"
           style={{width: '70%', color: 'black'}}
@@ -102,16 +143,20 @@ const LoginScreen = () => {
       <View style={styles.signInButtonContainer}>
         <Text style={styles.signIn}>Sign in</Text>
         <TouchableOpacity onPress={handleLogin}>
-        <LinearGradient
-          colors={['#f97794', '#623aa2']}
-          style={styles.linearGradient}>
-          <AntDesign
-            name="arrowright"
-            size={24}
-            color="white"
-            // style={styles.inputIcon}
-          />
-        </LinearGradient>
+          <LinearGradient
+            colors={['#f97794', '#623aa2']}
+            style={styles.linearGradient}>
+            {loading ? (
+              <ActivityIndicator size="small" color={'#fff'} />
+            ) : (
+              <AntDesign
+                name="arrowright"
+                size={24}
+                color="white"
+                // style={styles.inputIcon}
+              />
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
       <TouchableOpacity onPress={handleRegister}>
@@ -171,11 +216,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   inputContainer: {
-    marginBottom: 30,
+    marginBottom: 10,
     borderRadius: 30,
     marginHorizontal: 40,
     elevation: 10,
-    marginVertical: 20,
+    marginVertical: 30,
     backgroundColor: 'white',
     flexDirection: 'row',
     justifyContent: 'start',
